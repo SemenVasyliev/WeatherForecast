@@ -15,10 +15,15 @@ func Base() templ.CSSClass {
 	var templ_7745c5c3_CSSBuilder strings.Builder
 	templ_7745c5c3_CSSBuilder.WriteString(`background-color:#21295C;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`color:#FCFFF7;`)
-	templ_7745c5c3_CSSBuilder.WriteString(`font-family:Arial;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`font-family:'Arial', sans-serif;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`display:flex;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`flex-direction:column;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`align-items:center;`)
 	templ_7745c5c3_CSSBuilder.WriteString(`justify-content:center;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`height:100vh;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`margin:0;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`padding:20px;`)
+	templ_7745c5c3_CSSBuilder.WriteString(`box-sizing:border-box;`)
 	templ_7745c5c3_CSSID := templ.CSSID(`Base`, templ_7745c5c3_CSSBuilder.String())
 	return templ.ComponentCSSClass{
 		ID:    templ_7745c5c3_CSSID,
@@ -28,8 +33,8 @@ func Base() templ.CSSClass {
 
 func GetLocation(id string) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_GetLocation_2e4a`,
-		Function: `function __templ_GetLocation_2e4a(id){if (navigator.geolocation) {
+		Name: `__templ_GetLocation_6b29`,
+		Function: `function __templ_GetLocation_6b29(id){if (navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition((position) => {
 			const latitude = position.coords.latitude;
 			const longitude = position.coords.longitude;
@@ -47,37 +52,59 @@ func GetLocation(id string) templ.ComponentScript {
 }
 
 }`,
-		Call:       templ.SafeScript(`__templ_GetLocation_2e4a`, id),
-		CallInline: templ.SafeScriptInline(`__templ_GetLocation_2e4a`, id),
+		Call:       templ.SafeScript(`__templ_GetLocation_6b29`, id),
+		CallInline: templ.SafeScriptInline(`__templ_GetLocation_6b29`, id),
 	}
 }
 
 func FetchWeather(id string) templ.ComponentScript {
 	return templ.ComponentScript{
-		Name: `__templ_FetchWeather_9f76`,
-		Function: `function __templ_FetchWeather_9f76(id){const element = document.getElementById(id)
+		Name: `__templ_FetchWeather_5118`,
+		Function: `function __templ_FetchWeather_5118(id){const element = document.getElementById(id);
     const dataValue = element.getAttribute("data");
     const [latitude, longitude] = dataValue.split(",");
-    
-    const apikey = "5a81f0ac555f4382bc882320241201"
+
+    const apikey = "5828794b271c4f54b41181103242003";
     const apiUrl = ` + "`" + `http://api.weatherapi.com/v1/current.json?key=${apikey}&q=${latitude},${longitude}&aqi=no` + "`" + `;
 
     fetch(apiUrl)
     .then(response => response.json())
     .then(data => {
-        console.log('Weather Data:', data);
-        textContent = ` + "`" + `${data.location.country} <br/><br/>
-        ${data.current.condition.text} <br/><br/>
-        ${data.current.feelslike_c}°C<br/><br/>
-        <img src="${data.current.condition.icon}" />` + "`" + `
-        element.innerHTML = textContent
+		console.log('Weather Data:', data);
+        // Show data on page
+        const textContent = ` + "`" + `${data.location.country} <br/><br/>
+			${data.location.name} <br/><br/>
+            ${data.current.condition.text} <br/><br/>
+            ${data.current.temp_c}°C<br/><br/>
+            <img src="${data.current.condition.icon}" />` + "`" + `;
+        element.innerHTML = textContent;
+
+		document.getElementById("showWeatherBtn").style.display = 'none';
+
+        const weatherData = {			
+            country: data.location.country,
+			city: data.location.name,
+            conditionText: data.current.condition.text,
+            temp_c: data.current.temp_c,
+        };
+        // sending data to Go server
+        fetch("/weather-data", {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(weatherData),
+        })
+        .then(response => response.json())
+        .then(serverResponse => {
+            console.log('Response from server:', serverResponse);
+        })
+        .catch(error => console.error('Error sending weather data to server:', error));
     })
-    .catch(error => {
-        console.error('Error fetching weather:', error);
-    });
+    .catch(error => console.error('Error fetching weather:', error));
 }`,
-		Call:       templ.SafeScript(`__templ_FetchWeather_9f76`, id),
-		CallInline: templ.SafeScriptInline(`__templ_FetchWeather_9f76`, id),
+		Call:       templ.SafeScript(`__templ_FetchWeather_5118`, id),
+		CallInline: templ.SafeScriptInline(`__templ_FetchWeather_5118`, id),
 	}
 }
 
@@ -129,7 +156,20 @@ func Hello(name string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"><h1>Hello, ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var5 string
+		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(name)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `hello.templ`, Line: 90, Col: 29}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h1>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -137,29 +177,16 @@ func Hello(name string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<h1 onclick=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<button onclick=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var5 templ.ComponentScript = FetchWeather("data-div")
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5.Call)
+		var templ_7745c5c3_Var6 templ.ComponentScript = FetchWeather("data-div")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var6.Call)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">Hello, ")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var6 string
-		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(name)
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `hello.templ`, Line: 62, Col: 55}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</h1><div id=\"data-div\"></div></body></html>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" id=\"showWeatherBtn\">Show Weather</button><div id=\"data-div\"></div></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
